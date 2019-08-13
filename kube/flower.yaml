@@ -1,0 +1,40 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: celery-flower
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: flower
+    spec:
+      volumes:
+        - name: task-pv-storage
+          persistentVolumeClaim:
+            claimName: task-pv-claim
+      containers:
+      - name: celery-flower
+        image: firemanxbr/veriff:0.1.34
+        command: ["celery"]
+        args: ["flower", "-A", "task", "--address=0.0.0.0", "--port=5555"]
+        volumeMounts:
+          - mountPath: "/svc/images/"
+            name: task-pv-storage
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: flower
+  name: celery-flower
+spec:
+  externalTrafficPolicy: Cluster
+  ports:
+  - nodePort: 30555
+    port: 5555
+    protocol: TCP
+    targetPort: 5555
+  selector:
+    app: flower
+  type: NodePort

@@ -1,0 +1,23 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: worker
+spec:
+  replicas: 4
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      volumes:
+        - name: task-pv-storage
+          persistentVolumeClaim:
+            claimName: task-pv-claim
+      containers:
+      - name: worker
+        image: firemanxbr/veriff:0.1.34
+        command: ["celery"]
+        args: ["-A", "task", "worker", "--loglevel=info", "-Ofair"]
+        volumeMounts:
+          - mountPath: "/svc/images/"
+            name: task-pv-storage
